@@ -1,0 +1,49 @@
+stages:
+  - test_unitaire
+  - deploy_developement
+  - test_functional
+  - deploy_server_production
+
+Test_unitaire:
+  stage: test_unitaire
+  script:
+   - echo 'test'
+  #- apt-get update -qy
+  #- apt-get install -y python-dev python-pip
+  #- pip install -r requirements.txt
+  #- python3 -m unittest tests/test_api.py
+  only:
+  - development
+
+Deploy_developement:
+  stage: deploy_developement
+  script:
+  - echo "Deploy to developement server"
+  - apt-get update -qy
+  - apt-get install -y ruby-dev
+  - gem install dpl
+  - dpl --provider=heroku --app=$HEROKU_APP_DEV_KEY --api-key=$HEROKU_API_DEV_KEY --skip-cleanup
+  only:
+  - development
+
+Postman_test_Developement:
+  stage: test_functional
+  image:
+    name: postman/newman_alpine33
+    entrypoint: [""]
+  script:
+  - newman --version
+  - newman run "https://api.getpostman.com/collections/"
+  only:
+  - development
+
+Deploy_server_production:
+  stage: deploy_server_production
+  script:
+  - echo "Deploy to production server"
+  - apt-get update -qy
+  - apt-get install -y ruby-dev
+  - gem install dpl
+  - dpl --provider=heroku --app=api-apricity --api-key=$HEROKU_API_KEY --skip-cleanup
+  only:
+  - master
